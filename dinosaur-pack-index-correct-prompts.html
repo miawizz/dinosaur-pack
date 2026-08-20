@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dinosaurs | Silly Moments</title>
+  <meta name="theme-color" content="#127490" />
+  <link rel="icon" type="image/png" href="dinosaur-icon.png">
+  <link rel="apple-touch-icon" href="dinosaur-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Baloo+2:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream:#fff9f3;
+      --ink:#14323c;
+      --muted:#6b7f88;
+      --teal:#127490;
+      --teal2:#1690b4;
+      --rust:#b24627;
+      --rust2:#c95e3c;
+      --yellow:#f8b934;
+      --pink:#d94b7f;
+      --coral:#e86f5c;
+      --card:#ffffff;
+      --soft:#e4f3f7;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--cream);color:var(--ink);font-family:'Poppins',sans-serif;min-height:100vh;padding:22px 24px 60px}
+    button{font-family:inherit}
+    .shell{max-width:960px;margin:0 auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .hub-button,.theme-back{display:inline-block;background:rgba(0,0,0,.75);color:#fff;border:0;border-radius:10px;padding:9px 12px;font-weight:600;font-size:14px;text-decoration:none;cursor:pointer}
+    .circle-mode .hub-button{display:none!important}
+    .pack-header{text-align:center;margin:8px auto 22px}
+    .pack-icon{width:150px;height:150px;object-fit:contain;border-radius:24px;display:block;margin:0 auto 8px}
+    .pack-header h1{font-family:'Baloo 2',sans-serif;color:var(--teal);font-size:2rem;margin:0}
+    .pack-header p{margin:4px auto 0;color:#4c6670;max-width:620px}
+    .screen{display:none}
+    .screen.active{display:block}
+    .menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+    .menu-card{border:0;border-radius:18px;padding:18px 16px;background:var(--teal);color:#fff;text-align:left;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.09);transition:.12s ease}
+    .menu-card:hover{transform:translateY(-2px);background:var(--teal2)}
+    .menu-card strong{display:block;font-size:1.08rem;margin-bottom:5px}
+    .menu-card span{font-size:.84rem;opacity:.86;line-height:1.35}
+    .game-header{text-align:center;margin:4px auto 12px}
+    .game-header h2{font-family:'Baloo 2',sans-serif;color:var(--teal);font-size:1.75rem;margin:6px 0 2px}
+    .game-header p{color:var(--muted);margin:0 auto;max-width:650px;font-size:.92rem}
+    .generator-card{max-width:860px;margin:18px auto;background:#fff;border-radius:20px;padding:18px;box-shadow:0 6px 22px rgba(0,0,0,.07)}
+    .prompt{margin:16px auto;font-size:1.2rem;line-height:1.5;padding:20px;background:#fff;border-radius:16px;border:2px dashed var(--yellow);min-height:125px;display:flex;align-items:center;justify-content:center;text-align:center}
+    .btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:11px auto}
+    .btn{background:var(--rust);color:#fff;border:0;padding:12px 18px;border-radius:28px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+    .btn:hover{background:var(--rust2)}
+    .btn.secondary{background:#ffe9d6;color:#6b3a28}
+    .btn[disabled]{opacity:.45;cursor:not-allowed}
+    .favorites{max-width:860px;margin:22px auto 0;text-align:left}
+    .fav-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+    .fav-head h3{margin:0;color:#7a3e2e;font-size:1.05rem}
+    .fav-list{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:9px}
+    .fav-item{background:#fff;border:1px solid #ffdcbf;border-radius:13px;padding:11px 13px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .fav-item button{border:0;background:#ffe9d6;color:#6b3a28;border-radius:9px;padding:6px 9px;cursor:pointer}
+    .muted{color:var(--muted);font-size:.88rem}
+    .slot-card{max-width:860px;margin:18px auto;background:var(--yellow);border-radius:28px;padding:1.25rem;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    .slots{display:grid;grid-template-columns:1fr;gap:.7rem}
+    .slot{background:var(--pink);color:#fff9f3;border-radius:18px;padding:1rem .8rem;min-height:72px;display:grid;place-items:center;font-size:clamp(1.15rem,6vw,2.35rem);line-height:1;font-weight:800;text-transform:uppercase;word-break:break-word;text-align:center}
+    .slot:nth-child(2){background:var(--teal)} .slot:nth-child(3){background:var(--coral)}
+    .doodle-sentence{background:rgba(255,255,255,.92);border:2px dashed #fff;border-radius:18px;margin:1rem auto 0;padding:1rem;font-size:1.1rem;font-weight:600;color:#53322b}
+    .plot-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    .plot-card{background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.07);padding:16px}
+    .plot-card h3{color:var(--rust2);margin:0 0 8px;font-size:1rem}
+    .plot-out{background:#fff;border:2px dashed #d7e3e8;border-radius:16px;padding:14px;min-height:74px;display:flex;align-items:center;font-weight:600}
+    .rec-card{background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.07);padding:16px;margin:14px 0}
+    .footer{text-align:center;color:#777;font-size:.78rem;margin-top:34px;line-height:1.5}
+    #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--teal);color:#fff;padding:9px 13px;border-radius:11px;opacity:0;pointer-events:none;transition:.2s;z-index:9999}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+    @media(min-width:720px){.slots{grid-template-columns:1fr 1fr 1.2fr} .slot{min-height:120px}}
+    @media(min-width:860px){.plot-grid{grid-template-columns:1fr 1fr 1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <a class="hub-button" href="https://miawizz.github.io/php-app-hub/">← Back to Hub</a>
+    <button class="theme-back" id="themeBack" style="display:none">← Dinosaur Games</button>
+  </div>
+
+  <section id="homeScreen" class="screen active">
+    <div class="pack-header">
+      <img src="dinosaur-icon.png" alt="Dinosaurs theme icon" class="pack-icon">
+      <h1>DINOSAURS</h1>
+      <p>Choose a game and get silly with dinosaurs, pterosaurs, prehistoric sea creatures, and more.</p>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-card" data-screen="youare"><strong>You Are...</strong><span>Act out a ridiculous prehistoric prompt.</span></button>
+      <button class="menu-card" data-screen="sounds"><strong>Who Can Sound Like...</strong><span>Make the weirdest dinosaur-world sounds you can.</span></button>
+      <button class="menu-card" data-screen="faces"><strong>Make This Face</strong><span>Show your best prehistoric reaction face.</span></button>
+      <button class="menu-card" data-screen="wyr"><strong>Would You Rather</strong><span>Choose between two totally dino dilemmas.</span></button>
+      <button class="menu-card" data-screen="plot"><strong>Plot Twist</strong><span>Build a dinosaur story together and shake it up with twists.</span></button>
+      <button class="menu-card" data-screen="doodle"><strong>What Should We Doodle?</strong><span>Shuffle up a dinosaur drawing prompt.</span></button>
+    </div>
+  </section>
+
+  <section id="youareScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur You Are...</h2><p>Tap for a random prompt and act it out.</p></div>
+    <div class="generator-card" data-simple-game="youare"></div>
+  </section>
+
+  <section id="soundsScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur Who Can Sound Like...</h2><p>Use your voice, body, or anything nearby to make the sound.</p></div>
+    <div class="generator-card" data-simple-game="sounds"></div>
+  </section>
+
+  <section id="facesScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur Make This Face</h2><p>Read the situation and make the face.</p></div>
+    <div class="generator-card" data-simple-game="faces"></div>
+  </section>
+
+  <section id="wyrScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur Would You Rather</h2><p>Pick one and tell everyone why.</p></div>
+    <div class="generator-card" data-simple-game="wyr"></div>
+  </section>
+
+  <section id="plotScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur Plot Twist</h2><p>Start with a title, tell the story together, then tap for a twist whenever you need one.</p></div>
+    <div class="rec-card">
+      <h3 style="margin-top:0;color:var(--rust2)">Record Your Story</h3>
+      <div class="plot-out" id="recStatus">Ready to record. Your audio stays on your device.</div>
+      <div class="btns">
+        <button class="btn" id="recStart">Start recording</button>
+        <button class="btn secondary" id="recPause" disabled>Pause</button>
+        <button class="btn secondary" id="recStop" disabled>Stop</button>
+        <button class="btn secondary" id="recPlay" disabled>Play</button>
+        <button class="btn secondary" id="recDownload" disabled>Download</button>
+      </div>
+      <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
+    </div>
+    <div class="plot-grid">
+      <div class="plot-card">
+        <h3>STORY TITLE...</h3>
+        <div class="plot-out" id="titleOut">Tap below to get a title</div>
+        <div class="btns"><button class="btn" id="titleNext">GET A TITLE!</button><button class="btn secondary" id="titleBack">Back</button><button class="btn secondary" id="titleFwd">Forward</button></div>
+      </div>
+      <div class="plot-card">
+        <h3>READY FOR A PLOT TWIST...?</h3>
+        <div class="plot-out" id="twistOut">Tap below for a new idea</div>
+        <div class="btns"><button class="btn" id="twistNext">PLOT TWIST!</button><button class="btn secondary" id="twistBack">Back</button><button class="btn secondary" id="twistFwd">Forward</button></div>
+      </div>
+      <div class="plot-card">
+        <h3>READY TO WRAP IT UP...?</h3>
+        <div class="plot-out" id="wrapOut">Tap below for an ending idea</div>
+        <div class="btns"><button class="btn secondary" id="wrapNext">IDEAS FOR HOW TO END...</button><button class="btn secondary" id="wrapBack">Back</button><button class="btn secondary" id="wrapFwd">Forward</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="doodleScreen" class="screen">
+    <div class="game-header"><h2>Dinosaur What Should We Doodle?</h2><p>Shuffle an adjective, prehistoric subject, and action into one ridiculous drawing prompt.</p></div>
+    <div class="slot-card">
+      <div class="slots"><div class="slot" id="slotAdj">WHAT</div><div class="slot" id="slotSubject">SHOULD</div><div class="slot" id="slotAction">WE DOODLE?</div></div>
+      <div class="doodle-sentence" id="doodlePrompt">Tap the button below to shuffle up a dinosaur drawing prompt!</div>
+      <div class="btns"><button class="btn" id="doodleNext">What should we doodle?</button></div>
+      <div class="btns"><button class="btn secondary" id="doodleBack">Back</button><button class="btn secondary" id="doodleFwd">Forward</button></div>
+      <div class="btns"><button class="btn secondary" id="doodleSave">Save to Favorites</button></div>
+    </div>
+    <div class="favorites">
+      <div class="fav-head"><h3>Doodle Favorites</h3><div><button class="btn secondary" id="doodleCopy">Copy All</button> <button class="btn secondary" id="doodleClear">Clear</button></div></div>
+      <p class="muted" id="doodleEmpty">No favorites yet.</p><ul class="fav-list" id="doodleFavList"></ul>
+    </div>
+  </section>
+
+  <p class="footer">© 2026 Mia Wisinski, Playful Heart Parenting. For personal use only by purchasers. Please do not share without permission.</p>
+</div>
+<div id="toast"></div>
+
+<script>
+const DATA = {
+  youare: [
+  "You are a T. rex trying to eat spaghetti with your tiny arms.",
+  "You are a Triceratops who was trying to bounce in a bounce house but your three horns just popped it and it’s deflating!",
+  "You are a Stegosaurus getting your back plates painted at the stegosaurus salon and it’s super relaxing.",
+  "You are a Brachiosaurus trying to reach a leaf at the top of the world’s tallest redwood tree and it’s jusssst out of your reach!",
+  "You are a Velociraptor trying to sneakily steal your neighbor’s eggs.",
+  "You are an Ankylosaurus who accidentally knocked your mom’s favorite vase over with your tail club and it shattered everywhere.",
+  "You are a Spinosaurus trying to hide in a game of hide-and-seek, but the enormous sail on your back keeps giving you away.",
+  "You are a Parasaurolophus making up a crest-shake with your best friend (like a handshake but with your hollow tube-like crests on your head!).",
+  "You are a Pachycephalosaurus shopping for a hat and none of them fit over your big bony head!",
+  "You are a Diplodocus putting 5 million necklaces on your neck to look fancy for a birthday party.",
+  "You are a T. rex trying to hug your mom.",
+  "You are a Triceratops eating a 150-pound salad.",
+  "You are a Stegosaurus who just drank a steno-seltzer and you do a ginormous dino-burp.",
+  "You are a Brachiosaurus stomping on bubble wrap and getting scared when it pops!",
+  "You are a Velociraptor who just won the annual Velociraptor race and you’re so tired you collapse at the finish line!",
+  "You are an Ankylosaurus chasing your own tail because you think it’s a ball to play with.",
+  "You are a baby Spinosaurus trying to go for a ride on your mommy’s back but you keep slipping off because of her sail!",
+  "You are a Pteranodon coming in for a landing on a very windy day!",
+  "You are a Micropachycephalosaurus running away from a puppy because it’s bigger than you!",
+  "You are a Diplodocus who just got its tail stuck in the door!",
+  "You are a T. rex trying to scratch an itch right in the middle of your back.",
+  "You are a Triceratops trying to carefully carry a bunch of birthday balloons without popping them on your horns.",
+  "You are a Stegosaurus trying to squeeze through a tiny doorway.",
+  "You are a Brachiosaurus trying to tie your shoes but your neck is so long you can barely see your own feet!",
+  "You are a Velociraptor tiptoeing past a sleeping T. rex…",
+  "You are an Ankylosaurus playing baseball, using your tail as the baseball bat.",
+  "You are a baby Pterosaur leaving the nest and learning to fly for the first time!",
+  "You are a Megalodon who suddenly gets the hiccups underwater.",
+  "You are a Pachycephalosaurus playing freeze dance.",
+  "You are a Plesiosaurus whose four flippers all decide to swim in different directions.",
+  "You are a T. rex trying to pick up one tiny Cheerio from the floor.",
+  "You are a Triceratops super-embarrassed because you accidentally dyed your horns green when you were playing with food coloring.",
+  "You are a Pteranodon trying to fly but you spilled a bunch of yogurt on your wings and they’re crusty and not working quite right!",
+  "You are a Brachiosaurus trying to play limbo with the longest neck in the dinosaur world.",
+  "You are a Velociraptor whose giant foot claws keep getting caught in a fuzzy rug.",
+  "You are a Brachiosaurus riding an elevator, but your neck won't fit inside.",
+  "You are a Spinosaurus who wakes up to find a family of frogs using your giant back sail as a slide and you are not happy about it.",
+  "You are a Pachycephalosaurus mom trying to balance a giant stack of pancakes on your dome-shaped head to bring to the breakfast table for your family.",
+  "You are a T. rex trying to clap along to your favorite song.",
+  "You are a Triceratops trying to eat a giant sandwich but your horns keep poking it before you can get a bite.",
+  "You are a Brachiosaurus trying to dance but your super-long neck keeps swaying in the opposite direction and you just can’t get it together.",
+  "You are an Ankylosaurus trying to balance on your tail club (but your front is too heavy).",
+  "You are a Plesiosaurus trying to swim through a tiny underwater tunnel.",
+  "You are a Mosasaurus who opens your giant mouth for a bite of food and accidentally swallows a stinging jellyfish!",
+  "You are a baby Triceratops hatching out of an egg.",
+  "You are a daddy Brachiosaurus whose kids are using your long neck as a slide.",
+  "You are a Megalodon trying to brush every single one of your enormous teeth.",
+  "You are a Pteranodon who just landed on a branch that you are WAY too heavy for…",
+  "You are a T. rex trying to take a selfie.",
+  "You are a Diplodocus playing jump rope with your own tail.",
+  "You are a Pteranodon delivering pizzas, but the boxes keep blowing away while you fly.",
+  "You are a T. rex trying to put a fitted sheet on a bed.",
+  "You are a Triceratops going through a car wash and your horns keep getting tangled in the brushes."
+],
+  sounds: [
+  "A T. rex trying to roar while it has the hiccups.",
+  "A tiny dog barking at a T. rex and trying VERY hard to scare it away.",
+  "A Diplodocus playing the kazoo.",
+  "A baby T. rex learning how to roar.",
+  "A Pteranodon who accidentally swallowed a squeaky toy.",
+  "A T. rex mommy roaring a dino lullaby to its babies.",
+  "A Parasaurolophus using its head crest like a giant trumpet and playing a really snazzy jazz solo.",
+  "A Mosasaurus gargling mouthwash.",
+  "A Velociraptor arguing with its friend over who gets to eat the last egg.",
+  "A grumpy Brachiosaurus grumbling that it has to go to work.",
+  "A Stegosaurus chewing through a really tough plant.",
+  "A T. rex trying to beatbox.",
+  "A Stegosaurus backing up like a garbage truck, making the beep beep beep noise just for fun.",
+  "A baby Pterosaur learning how to squawk for the first time.",
+  "A T. rex trying to roar but it has a sore throat.",
+  "A very very very old Triceratops trying to hum its favorite song.",
+  "A Megalodon whispering a secret to a tiny fish.",
+  "A T. rex ordering food at the drive-thru.",
+  "A dinosaur teacher roaring for her class to be quiet.",
+  "A hangry baby Pteranodon squawking for a snack.",
+  "A little dinosaur trying to roar-sing the ABC song."
+],
+  faces: [
+  "You’re a T. rex whose nose itches so bad but you CAN’T scratch it.",
+  "You just looked out your bedroom window and a Brachiosaurus is staring right at you.",
+  "You’re a baby T. rex trying to make its scariest face.",
+  "You opened the bathroom door and there's a baby T. rex sitting in your bathtub asking for more bubbles.",
+  "You’re a Triceratops trying VERY hard not to sneeze.",
+  "You’re a Triceratops who just popped your favorite squishy toy on purpose with its horns.",
+  "You’re a T. rex who just tasted a lemon for the first time.",
+  "You just opened your backpack and a Micropachycephalosaurus jumped out!",
+  "You’re a Stegosaurus who feels something crawling between the plates on its back but can’t quite turn its head to see what it is.",
+  "You just realized the rock you've been sitting on is actually a dinosaur egg that's starting to crack!",
+  "You’re a Pteranodon flying through the sky and you just accidentally swallowed a huge bug.",
+  "You walked into the kitchen and a Stegosaurus is eating everything in your refrigerator!",
+  "You’re a Megalodon trying to smile nicely for its school picture.",
+  "You're swimming in the ocean when a Mosasaurus swims right underneath you.",
+  "You looked outside and saw a Triceratops bouncing on your trampoline.",
+  "You’re a Velociraptor who was trying to steal another dinosaur’s egg and you just got caught.",
+  "You’re a mommy dinosaur whose eggs just hatched and you have the cutest dino babies ever!",
+  "You’re a paleontologist who just discovered a brand new species of dinosaurs!",
+  "You felt something wet land on your head and realized a Brachiosaurus just drooled on you.",
+  "You’re a dinosaur dentist and you just smelled the WORST T. rex breath you’ve ever smelled.",
+  "You were about to take a bite of your sandwich when a Pteranodon swooped down and stole it.",
+  "You’re an Ankylosaurus who heard a HUGE crash behind you and you’re pretty sure your tail did it… oops!",
+  "You’re a Brachiosaurus that just tasted a new kind of leaf and it tastes absolutely disgusting.",
+  "You’re a supersaurus who just stepped on a LEGO.",
+  "Your dinosaur stuffy toy just came to life and started roaring at you…"
+],
+  wyr: [
+  "Would you rather have tiny T. rex arms or a giant Brachiosaurus neck?",
+  "Would you rather have a Triceratops's three horns or a Stegosaurus's spiky tail?",
+  "Would you rather have to wear a dinosaur costume all year long or roar like a dinosaur whenever you enter a room?",
+  "Would you rather be able to fly like a Pteranodon or hold your breath underwater for a long time like a Mosasaurus?",
+  "Would you rather have a pet baby T. rex or a pet baby Triceratops (as long as it likes you and doesn’t try to hurt you)?",
+  "Would you rather have to brush a sleeping T. rex's teeth or clip a sleeping Velociraptor's toe claws?",
+  "Would you rather be able to run as fast as a Velociraptor or be as tough as an Ankylosaurus?",
+  "Would you rather eat dinosaur-shaped nuggets for every single meal or have to eat one actual leaf every morning like a Brachiosaurus?",
+  "Would you rather have Ankylosaurus armor all over your body or a Pachycephalosaurus's super-hard head?",
+  "Would you rather have your morning alarm sound be a dino roaring or a pterodactyl screeching?",
+  "Would you rather be as tall as a Brachiosaurus or as fast as a Velociraptor?",
+  "Would you rather have to clean up dinosaur poop every day or brush dinosaur teeth every night (they are nice dinos that don’t bite you but they have really stinky breath!)?",
+  "Would you rather be able to go back in time and visit the dinosaurs or would you rather be able to bring dinosaurs into the future and live here with us now?",
+  "Would you rather have your sneezes sound like a dino roar or your hiccups sound like a Pteranodon squawking?",
+  "Would you rather discover a dinosaur egg in your backyard or a dinosaur skeleton?",
+  "Would you rather have a dinosaur tail or dinosaur teeth (the rest of your body looks the same)?",
+  "Would you rather have feet as big as a Supersaurus or a sail on your back like a Spinosaurus?",
+  "Would you rather have a pet Micropachycephalosaurus who is super cute and snuggles on your lap or a pet Pteranodon that lets you ride on its back?",
+  "Would you rather be able to talk to dinosaurs or turn into any dinosaur you want?",
+  "Would you rather have a tiny T. rex the size of a chicken or a giant chicken the size of a T. rex?",
+  "Would you rather have to walk a Velociraptor on a leash or give a Stegosaurus a bath?",
+  "Would you rather have to get around by stomping as hard as you can like a dino (and you leave footprints) or by riding on a Pteranodon’s back?"
+],
+  titles: [
+  "Danny the Tap Dancing Dinosaur.",
+  "The Toddler Who Had a Pet T. Rex.",
+  "Tyler the T. Rex Who Was Afraid of Everything.",
+  "The Day the Dinosaurs Came Back.",
+  "Chuck The Chicken Who Thought He Was a Dinosaur.",
+  "The World’s Stinkiest Dinosaur.",
+  "The T. Rex Toy That Came to Life.",
+  "The Dinosaur at the Door.",
+  "Betty The Ballerina Dino.",
+  "The Brontosaurus Chorus.",
+  "The Dinosaur Who Couldn’t Roar.",
+  "Sammy the World's Slowest Velociraptor.",
+  "The Dinosaur Under My Bed.",
+  "Tina the Triceratops Who Had Five Horns.",
+  "Daphne the Dino and Her Magic Wand."
+],
+  twists: [
+  "Suddenly a Velociraptor ran by and said, “SHHH! Don’t tell anyone but I just stole your neighbor’s breakfast” as it zoomed past…",
+  "Just then a loud roar shook the earth… what was it??",
+  "“Hold it right there!” boomed a voice. “What are you doing in MY backyard??”",
+  "“I beg your pardon,” squeaked a voice… it was a tiny Micropachycephalosaurus holding a microphone. “Am I in the right place for the talent show try-outs?”",
+  "Suddenly they heard the loudest sneeze they ever heard in their life and looked over to see a T. rex blowing his nose and saying, “Oh, dear. My allergies are acting up again...”",
+  "Just then… the unmistakable smell of a T. rex’s stinky breath filled the air…",
+  "Suddenly, a little boy in a dinosaur costume ran up out of breath and said, “You’ll never believe this but… I just saw a REAL LIFE DINOSAUR and it’s headed this way!”",
+  "Just then music started blasting out of nowhere and it kind of sounded like a marching band with roaring mixed in…",
+  "Suddenly the ground began to rumble. They looked up and saw smoke rising in the distance… a volcano was about to erupt!",
+  "Just then, a Pteranodon swooped down and squawked, “Quick! Get on my back! There’s no time to explain… ya just gotta TRUST me!”",
+  "A quiet crackling sound suddenly interrupted everything… over in the corner sat a dinosaur egg… and it looked like it was hatching!",
+  "“Gary?? Gary the Giganotosaurus, is that YOU??” boomed a voice from out of nowhere…",
+  "Suddenly a mysterious door appeared out of nowhere… and when it swung open, roaring sounds were coming from the other side…",
+  "Just then, a grumpy old grandmother Suzhousaurus waddled by grumbling, “I’m getting too old for this… GET BACK HERE KIDS!”",
+  "Suddenly a mysterious voice from out of nowhere warned, “Whatever you do… do NOT give any cupcakes to the dinosaur next door…”",
+  "Suddenly, the sound of thunderous applause filled the air… there was a traveling dinosaur circus show and everyone in town had come to watch.",
+  "Just then a silly-looking paleontologist ran over holding a giant bone shouting, “I’ve done it! I’ve done it! I’ve discovered the newest dinosaur species!!”",
+  "Just then a squeaky little voice spoke up from around the corner. It was a baby Triceratops who had been watching everything and it clearly had something to say.",
+  "Suddenly, the sound of a saxophone filled the air and they looked over to see a Diplodocus playing the most beautiful jazz music they’d ever heard. “Do you mind if I practice over here?” he asked.",
+  "Just then they heard a sad voice cry, “Aw shucks, not AGAIN!” and they turned to see a Triceratops who had just accidentally popped her bouquet of balloons with her horns."
+],
+  wraps: [
+  "End the story with something happy",
+  "Finish by solving the main problem",
+  "Have the characters feel safe again",
+  "Let everyone get what they were hoping for",
+  "Show how things have changed since the beginning",
+  "End with the characters making a plan for next time",
+  "Wrap it up with a feeling — excitement, relief, joy, or calm",
+  "Leave the story open so it could continue later",
+  "End in the same place or situation where it began",
+  "Give the final line to the main character"
+],
+  adjectives: [
+  "sleepy",
+  "sassy",
+  "tiny",
+  "gigantic",
+  "grumpy",
+  "sparkly",
+  "confused",
+  "sneaky",
+  "muddy",
+  "wobbly",
+  "royal",
+  "fuzzy",
+  "dramatic",
+  "invisible",
+  "polka-dotted",
+  "fluffy",
+  "stinky",
+  "rainbow",
+  "nervous",
+  "fancy",
+  "clumsy",
+  "cranky",
+  "magical",
+  "hairy",
+  "extremely polite"
+],
+  subjects: [
+  "T. rex",
+  "baby T. rex",
+  "Triceratops",
+  "baby Triceratops",
+  "Stegosaurus",
+  "Brachiosaurus",
+  "Velociraptor",
+  "Ankylosaurus",
+  "Spinosaurus",
+  "Parasaurolophus",
+  "Pachycephalosaurus",
+  "Diplodocus",
+  "Pteranodon",
+  "baby Pteranodon",
+  "Mosasaurus",
+  "Megalodon",
+  "dinosaur egg",
+  "baby dinosaur",
+  "dinosaur skeleton",
+  "dinosaur family",
+  "great-great-grandpa T. rex",
+  "paleontologist",
+  "dinosaur teacher",
+  "dinosaur rockstar",
+  "dinosaur grandma"
+],
+  actions: [
+  "riding a skateboard",
+  "brushing its teeth",
+  "eating spaghetti",
+  "taking a bubble bath",
+  "playing soccer",
+  "flying a kite",
+  "baking cookies",
+  "jumping on a trampoline",
+  "doing ballet",
+  "having a tea party",
+  "playing the drums",
+  "taking a selfie",
+  "riding a scooter",
+  "getting a haircut",
+  "blowing bubbles",
+  "having a dance party",
+  "playing hide-and-seek",
+  "eating an enormous taco",
+  "doing yoga",
+  "building a sandcastle",
+  "roller skating",
+  "playing the piano",
+  "wearing pajamas to a fancy dinner",
+  "having a pillow fight",
+  "making pancakes",
+  "walking a tiny dog",
+  "playing video games",
+  "having a picnic",
+  "singing karaoke",
+  "trying to hula hoop",
+  "going down a playground slide",
+  "making a giant pizza",
+  "riding a bicycle",
+  "having a water balloon fight",
+  "playing mini golf",
+  "trying to fold a fitted sheet",
+  "shopping for groceries",
+  "playing basketball",
+  "painting a picture",
+  "building a couch-cushion fort",
+  "having a staring contest",
+  "walking on a tightrope",
+  "trying to juggle",
+  "having an awkward family photo taken",
+  "blowing out birthday candles",
+  "trying to fit into a tiny car",
+  "playing in a marching band",
+  "licking an ice cream cone",
+  "playing with slime",
+  "having a snowball fight"
+]
+};
+
+const NS = "dinosaur-pack";
+const screens = document.querySelectorAll(".screen");
+const themeBack = document.getElementById("themeBack");
+
+function showScreen(name) {
+  screens.forEach(s => s.classList.remove("active"));
+  const target = document.getElementById(name + "Screen");
+  if (target) target.classList.add("active");
+  themeBack.style.display = name === "home" ? "none" : "inline-block";
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("[data-screen]").forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.screen)));
+themeBack.addEventListener("click", () => showScreen("home"));
+
+if (new URLSearchParams(location.search).get("circle") === "1") document.body.classList.add("circle-mode");
+
+function shuffle(a) {
+  for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function toast(msg) {
+  const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show");
+  clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>el.classList.remove("show"),1200);
+}
+function makeDeck(key, items) {
+  const base = `${NS}_${key}`;
+  const version = JSON.stringify(items).length + ":" + items.length;
+  const load = (k,f) => { try { return JSON.parse(localStorage.getItem(base+"_"+k)) ?? f; } catch { return f; } };
+  let order=load("order",null), idx=Number(localStorage.getItem(base+"_idx")||0), hist=load("hist",[]), pos=Number(localStorage.getItem(base+"_pos")||0);
+  if (localStorage.getItem(base+"_ver") !== version || !Array.isArray(order) || order.length!==items.length) {
+    order=shuffle([...Array(items.length).keys()]); idx=0; hist=[]; pos=0;
+  }
+  function save() {
+    localStorage.setItem(base+"_ver",version); localStorage.setItem(base+"_order",JSON.stringify(order));
+    localStorage.setItem(base+"_idx",String(idx)); localStorage.setItem(base+"_hist",JSON.stringify(hist)); localStorage.setItem(base+"_pos",String(pos));
+  }
+  function next() {
+    if (pos<hist.length) hist.splice(pos);
+    let pick=order[idx++]; 
+    if (idx>=order.length) { const avoid=pick; order=shuffle([...Array(items.length).keys()]); if(items.length>1 && order[0]===avoid) [order[0],order[1]]=[order[1],order[0]]; idx=0; }
+    hist.push(pick); if(hist.length>500) hist.shift(); pos=hist.length; save(); return pick;
+  }
+  function back() { if(pos<=1)return null; pos--; save(); return hist[pos-1]; }
+  function fwd() { if(pos>=hist.length)return null; const i=hist[pos]; pos++; save(); return i; }
+  function current() { return pos>0 && hist.length ? hist[pos-1] : null; }
+  function canBack() { return pos>1; } function canFwd() { return pos<hist.length; }
+  save(); return {items,next,back,fwd,current,canBack,canFwd};
+}
+
+function setupSimpleGame(key, buttonText) {
+  const root=document.querySelector(`[data-simple-game="${key}"]`);
+  const deck=makeDeck(key, DATA[key]);
+  root.innerHTML = `
+    <div class="btns"><button class="btn next">${buttonText}</button></div>
+    <div class="btns"><button class="btn secondary back">Back</button><button class="btn secondary fwd">Forward</button></div>
+    <div class="btns"><button class="btn secondary save">Save to Favorites</button></div>
+    <div class="prompt">Tap the button to get a dinosaur prompt!</div>
+    <div class="favorites">
+      <div class="fav-head"><h3>Favorites</h3><div><button class="btn secondary copy">Copy All</button> <button class="btn secondary clear">Clear</button></div></div>
+      <p class="muted empty">No favorites yet. Save any you love.</p><ul class="fav-list"></ul>
+    </div>`;
+  const p=root.querySelector(".prompt"), back=root.querySelector(".back"), fwd=root.querySelector(".fwd"), save=root.querySelector(".save"), list=root.querySelector(".fav-list"), empty=root.querySelector(".empty");
+  const favKey=`${NS}_${key}_favs`;
+  let favs=[]; try{favs=JSON.parse(localStorage.getItem(favKey)||"[]")}catch{}
+  function update() {
+    back.disabled=!deck.canBack(); fwd.disabled=!deck.canFwd();
+    const i=deck.current(); save.disabled=i==null; save.textContent=(i!=null && favs.includes(i))?"Saved":"Save to Favorites";
+  }
+  function renderFavs() {
+    list.innerHTML=""; empty.style.display=favs.length?"none":"block";
+    favs.forEach(i=>{const li=document.createElement("li");li.className="fav-item";const t=document.createElement("div");t.textContent=DATA[key][i];const b=document.createElement("button");b.textContent="Remove";b.onclick=()=>{favs=favs.filter(x=>x!==i);localStorage.setItem(favKey,JSON.stringify(favs));renderFavs();update();};li.append(t,b);list.appendChild(li);});
+  }
+  root.querySelector(".next").onclick=()=>{p.textContent="Here you go...!";setTimeout(()=>{const i=deck.next();p.textContent=DATA[key][i];update();},180)};
+  back.onclick=()=>{const i=deck.back();if(i!=null)p.textContent=DATA[key][i];update();};
+  fwd.onclick=()=>{const i=deck.fwd();if(i!=null)p.textContent=DATA[key][i];update();};
+  save.onclick=()=>{const i=deck.current();if(i==null)return;if(!favs.includes(i)){favs.push(i);localStorage.setItem(favKey,JSON.stringify(favs));renderFavs();toast("Saved to favorites");}update();};
+  root.querySelector(".copy").onclick=()=>{if(!favs.length)return toast("No favorites to copy");navigator.clipboard.writeText(favs.map(i=>DATA[key][i]).join("\n"));toast("Favorites copied");};
+  root.querySelector(".clear").onclick=()=>{favs=[];localStorage.setItem(favKey,"[]");renderFavs();update();toast("Favorites cleared");};
+  const i=deck.current(); if(i!=null)p.textContent=DATA[key][i]; renderFavs(); update();
+}
+
+setupSimpleGame("youare","You are...");
+setupSimpleGame("sounds","Who can sound like...");
+setupSimpleGame("faces","Make this face");
+setupSimpleGame("wyr","Would you rather...");
+
+function wirePlot(prefix, items, outId, nextId, backId, fwdId) {
+  const deck=makeDeck("plot_"+prefix,items), out=document.getElementById(outId), next=document.getElementById(nextId), back=document.getElementById(backId), fwd=document.getElementById(fwdId);
+  function update(){back.disabled=!deck.canBack();fwd.disabled=!deck.canFwd();}
+  next.onclick=()=>{const i=deck.next();out.textContent=items[i];update();};
+  back.onclick=()=>{const i=deck.back();if(i!=null)out.textContent=items[i];update();};
+  fwd.onclick=()=>{const i=deck.fwd();if(i!=null)out.textContent=items[i];update();};
+  const i=deck.current(); if(i!=null)out.textContent=items[i]; update();
+}
+wirePlot("title",DATA.titles,"titleOut","titleNext","titleBack","titleFwd");
+wirePlot("twist",DATA.twists,"twistOut","twistNext","twistBack","twistFwd");
+wirePlot("wrap",DATA.wraps,"wrapOut","wrapNext","wrapBack","wrapFwd");
+
+const doodleKey=`${NS}_doodle`;
+let doodleHist=[]; try{doodleHist=JSON.parse(localStorage.getItem(doodleKey+"_hist")||"[]")}catch{}
+let doodlePos=Number(localStorage.getItem(doodleKey+"_pos")||doodleHist.length);
+let doodleFavs=[]; try{doodleFavs=JSON.parse(localStorage.getItem(doodleKey+"_favs")||"[]")}catch{}
+const $=id=>document.getElementById(id);
+function rand(a){return a[Math.floor(Math.random()*a.length)]}
+function makeDoodle(){return{adjective:rand(DATA.adjectives),subject:rand(DATA.subjects),action:rand(DATA.actions)}}
+function doodleText(p){return p.adjective.charAt(0).toUpperCase()+p.adjective.slice(1)+" "+p.subject+" "+p.action}
+function showDoodle(p){$("slotAdj").textContent=p.adjective;$("slotSubject").textContent=p.subject;$("slotAction").textContent=p.action;$("doodlePrompt").textContent=doodleText(p)}
+function saveDoodleState(){localStorage.setItem(doodleKey+"_hist",JSON.stringify(doodleHist));localStorage.setItem(doodleKey+"_pos",String(doodlePos));}
+function currentDoodle(){return doodlePos>0?doodleHist[doodlePos-1]:null}
+function sameDoodle(a,b){return a&&b&&a.adjective===b.adjective&&a.subject===b.subject&&a.action===b.action}
+function updateDoodle(){
+  $("doodleBack").disabled=doodlePos<=1;$("doodleFwd").disabled=doodlePos>=doodleHist.length;
+  const p=currentDoodle();$("doodleSave").disabled=!p;$("doodleSave").textContent=p&&doodleFavs.some(f=>sameDoodle(f,p))?"Saved":"Save to Favorites";
+}
+function renderDoodleFavs(){
+  const list=$("doodleFavList");list.innerHTML="";$("doodleEmpty").style.display=doodleFavs.length?"none":"block";
+  doodleFavs.forEach((p,i)=>{const li=document.createElement("li");li.className="fav-item";const t=document.createElement("div");t.textContent=doodleText(p);const b=document.createElement("button");b.textContent="Remove";b.onclick=()=>{doodleFavs.splice(i,1);localStorage.setItem(doodleKey+"_favs",JSON.stringify(doodleFavs));renderDoodleFavs();updateDoodle();};li.append(t,b);list.appendChild(li);});
+}
+$("doodleNext").onclick=()=>{if(doodlePos<doodleHist.length)doodleHist.splice(doodlePos);const p=makeDoodle();doodleHist.push(p);if(doodleHist.length>500)doodleHist.shift();doodlePos=doodleHist.length;let c=0;const int=setInterval(()=>{$("slotAdj").textContent=rand(DATA.adjectives);$("slotSubject").textContent=rand(DATA.subjects);$("slotAction").textContent=rand(DATA.actions);if(++c>=9){clearInterval(int);showDoodle(p)}},65);saveDoodleState();updateDoodle();};
+$("doodleBack").onclick=()=>{if(doodlePos>1){doodlePos--;showDoodle(currentDoodle());saveDoodleState();updateDoodle();}};
+$("doodleFwd").onclick=()=>{if(doodlePos<doodleHist.length){doodlePos++;showDoodle(currentDoodle());saveDoodleState();updateDoodle();}};
+$("doodleSave").onclick=()=>{const p=currentDoodle();if(p&&!doodleFavs.some(f=>sameDoodle(f,p))){doodleFavs.push(p);localStorage.setItem(doodleKey+"_favs",JSON.stringify(doodleFavs));renderDoodleFavs();toast("Saved to favorites");}updateDoodle();};
+$("doodleCopy").onclick=()=>{if(!doodleFavs.length)return toast("No favorites to copy");navigator.clipboard.writeText(doodleFavs.map(doodleText).join("\n"));toast("Favorites copied");};
+$("doodleClear").onclick=()=>{doodleFavs=[];localStorage.setItem(doodleKey+"_favs","[]");renderDoodleFavs();updateDoodle();toast("Favorites cleared");};
+if(doodleHist.length){doodlePos=doodleHist.length;showDoodle(currentDoodle())} renderDoodleFavs();updateDoodle();
+
+let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null;
+const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recStatus=$("recStatus"),player=$("player");
+const canPause=!!(window.MediaRecorder&&MediaRecorder.prototype&&typeof MediaRecorder.prototype.pause==="function");
+if(!canPause)recPause.style.display="none";
+function pickMime(){for(const t of ["audio/mp4;codecs=aac","audio/mp4","audio/webm;codecs=opus","audio/webm"])if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))return t;return""}
+function ext(m){m=(m||"").toLowerCase();return m.includes("mp4")?"m4a":m.includes("webm")?"webm":"audio"}
+recStart.onclick=async()=>{recStart.disabled=true;try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});const mime=pickMime();mediaRecorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};mediaRecorder.onstart=()=>recStatus.textContent="Recording…";mediaRecorder.onpause=()=>recStatus.textContent="Paused";mediaRecorder.onresume=()=>recStatus.textContent="Recording…";mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||mime||"audio/webm";const blob=new Blob(chunks,{type});if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);player.src=blobUrl;player.style.display="block";recPlay.disabled=false;recDownload.disabled=false;recStatus.textContent="Recording ready to play or download";if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null};recDownload.onclick=()=>{const a=document.createElement("a");a.href=blobUrl;a.download="dinosaur-plot-twist-story."+ext(type);document.body.appendChild(a);a.click();a.remove()}};mediaRecorder.start();recStop.disabled=false;if(canPause)recPause.disabled=false;recPlay.disabled=true;recDownload.disabled=true;}catch(e){recStatus.textContent="Microphone not available or permission denied.";recStart.disabled=false;}};
+recPause.onclick=()=>{if(!mediaRecorder)return;if(mediaRecorder.state==="recording"){mediaRecorder.pause();recPause.textContent="Resume"}else if(mediaRecorder.state==="paused"){mediaRecorder.resume();recPause.textContent="Pause"}};
+recStop.onclick=()=>{if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();recStart.disabled=false;recStop.disabled=true;if(canPause){recPause.disabled=true;recPause.textContent="Pause"}};
+recPlay.onclick=()=>{if(player.src)player.play()};
+</script>
+</body>
+</html>
