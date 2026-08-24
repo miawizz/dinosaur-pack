@@ -103,6 +103,59 @@
     .story-card audio{width:100%}
     .story-empty{color:var(--muted);font-size:.84rem}
 
+
+    .story-share-form{
+      margin-top:12px;
+      display:grid;
+      gap:10px;
+    }
+    .story-share-form label{
+      font-weight:700;
+      color:#53322b;
+      font-size:.9rem;
+    }
+    .story-share-form input{
+      width:100%;
+      padding:.8rem .9rem;
+      border-radius:12px;
+      border:2px dashed var(--yellow);
+      font-family:inherit;
+      font-size:.95rem;
+    }
+    .story-byline{
+      color:var(--muted);
+      font-size:.78rem;
+      margin:-2px 0 8px;
+    }
+    .share-confirm{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:25000;
+    }
+    .share-confirm.show{display:flex}
+    .share-confirm-card{
+      max-width:420px;
+      width:100%;
+      background:#fff;
+      border-radius:18px;
+      padding:22px;
+      box-shadow:0 12px 40px rgba(0,0,0,.22);
+      text-align:center;
+    }
+    .share-confirm-card h3{
+      margin:0 0 8px;
+      color:var(--teal);
+    }
+    .share-confirm-card p{
+      color:var(--muted);
+      margin:0 0 14px;
+    }
+
   </style>
 </head>
 <body>
@@ -164,17 +217,21 @@
       <div class="story-share-note">
         Sharing is optional. Your recording stays on your device unless you choose “Share This Story!” Shared stories can be played by other families using the app.
       </div>
+
+      <div class="story-share-form">
+        <div>
+          <label for="storyShareTitle">Story title</label>
+          <input id="storyShareTitle" type="text" placeholder="Choose a Story Title first, or type your own">
+        </div>
+        <div>
+          <label for="storyShareBy">Who is it by? <span style="font-weight:400">(optional)</span></label>
+          <input id="storyShareBy" type="text" placeholder="Example: The Smith Family">
+        </div>
+      </div>
+
       <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
     </div>
-
-    <div class="story-gallery">
-      <h3>The Story Gallery</h3>
-      <p class="muted" style="margin-top:0">Stories shared by families playing Plot Twist.</p>
-      <div id="storyGalleryList" class="story-gallery-grid"></div>
-      <p id="storyGalleryEmpty" class="story-empty">No shared stories yet.</p>
-    </div>
-
-    <div class="plot-grid">
+<div class="plot-grid">
       <div class="plot-card">
         <h3>STORY TITLE...</h3>
         <div class="plot-out" id="titleOut">Tap below to get a title</div>
@@ -190,6 +247,13 @@
         <div class="plot-out" id="wrapOut">Tap below for an ending idea</div>
         <div class="btns"><button class="btn secondary" id="wrapNext">IDEAS FOR HOW TO END...</button><button class="btn secondary" id="wrapBack">Back</button><button class="btn secondary" id="wrapFwd">Forward</button></div>
       </div>
+    </div>
+  
+    <div class="story-gallery">
+      <h3>The Story Gallery</h3>
+      <p class="muted" style="margin-top:0">Stories shared by families playing Plot Twist.</p>
+      <div id="storyGalleryList" class="story-gallery-grid"></div>
+      <p id="storyGalleryEmpty" class="story-empty">No shared stories yet.</p>
     </div>
   </section>
 
@@ -236,6 +300,15 @@
   <div id="lightboxContent">
     <img id="lightboxImage" src="" alt="">
     <p id="lightboxPrompt"></p>
+  </div>
+</div>
+
+
+<div id="shareConfirm" class="share-confirm" aria-hidden="true">
+  <div class="share-confirm-card">
+    <h3>Thanks for sharing your story!</h3>
+    <p>It’ll appear in the Story Gallery shortly.</p>
+    <button class="btn" id="shareConfirmClose" type="button">Got it!</button>
   </div>
 </div>
 
@@ -627,6 +700,11 @@ function wirePlot(prefix, items, outId, nextId, backId, fwdId) {
   const i=deck.current(); if(i!=null)out.textContent=items[i]; update();
 }
 wirePlot("title",DATA.titles,"titleOut","titleNext","titleBack","titleFwd");
+["titleNext","titleBack","titleFwd"].forEach(id=>{
+  const btn=$(id);
+  if(btn) btn.addEventListener("click",()=>setTimeout(()=>syncStoryShareTitle(true),0));
+});
+
 wirePlot("twist",DATA.twists,"twistOut","twistNext","twistBack","twistFwd");
 wirePlot("wrap",DATA.wraps,"wrapOut","wrapNext","wrapBack","wrapFwd");
 
@@ -661,6 +739,8 @@ if(doodleHist.length){doodlePos=doodleHist.length;showDoodle(currentDoodle())} r
 let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null, lastStoryBlob=null, lastStoryMime="";
 const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recShare=$("recShare"),recStatus=$("recStatus"),player=$("player");
 const storyGalleryList=$("storyGalleryList"),storyGalleryEmpty=$("storyGalleryEmpty");
+const storyShareTitle=$("storyShareTitle"),storyShareBy=$("storyShareBy");
+const shareConfirm=$("shareConfirm"),shareConfirmClose=$("shareConfirmClose");
 const canPause=!!(window.MediaRecorder&&MediaRecorder.prototype&&typeof MediaRecorder.prototype.pause==="function");
 if(!canPause)recPause.style.display="none";
 function pickMime(){for(const t of ["audio/mp4;codecs=aac","audio/mp4","audio/webm;codecs=opus","audio/webm"])if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))return t;return""}
@@ -682,6 +762,19 @@ function currentPlotStoryTitle(){
   return i==null ? "" : DATA.titles[i];
 }
 
+let storyTitleManuallyEdited=false;
+
+function syncStoryShareTitle(force=false){
+  if(!storyShareTitle)return;
+  if(force || !storyTitleManuallyEdited){
+    storyShareTitle.value=currentPlotStoryTitle();
+  }
+}
+
+if(storyShareTitle){
+  storyShareTitle.addEventListener("input",()=>{storyTitleManuallyEdited=true;});
+}
+
 async function loadStoryGallery(){
   if(!storyGalleryList||!storyGalleryEmpty)return;
   try{
@@ -698,8 +791,11 @@ async function loadStoryGallery(){
       const card=document.createElement("div");card.className="story-card";
       const title=document.createElement("div");title.className="story-card-title";title.textContent=item.title||"Untitled Plot Twist Story";
       const theme=document.createElement("div");theme.className="story-card-theme";theme.textContent=item.theme||"Plot Twist";
+      const by=document.createElement("div");by.className="story-byline";
+      by.textContent=item.by ? "By " + item.by : "";
+      if(!item.by) by.style.display="none";
       const audio=document.createElement("audio");audio.controls=true;audio.preload="none";audio.src=item.audioUrl;
-      card.append(title,theme,audio);storyGalleryList.appendChild(card);
+      card.append(title,theme,by,audio);storyGalleryList.appendChild(card);
     });
   }catch(e){
     console.log("Story gallery could not load:",e);
@@ -723,25 +819,43 @@ recShare.onclick=async()=>{
     recStatus.textContent="Record a story first, then you can share it.";
     return;
   }
-  const title=currentPlotStoryTitle();
+
+  const title=(storyShareTitle?.value||"").trim();
+  const by=(storyShareBy?.value||"").trim();
+
   if(!title){
-    recStatus.textContent="Choose a Story Title before sharing your recording.";
-    $("titleOut").scrollIntoView({behavior:"smooth",block:"center"});
+    recStatus.textContent="Please add a story title before sharing.";
+    storyShareTitle?.focus();
     return;
   }
+
   if(!window.confirm(`Share “${title}” in the public Story Gallery? Anyone with access to the app may be able to play it.`))return;
 
   recShare.disabled=true;
   recStatus.textContent="Uploading your story…";
+
   try{
     const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
     if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
+
     await fetch(STORY_GALLERY_ENDPOINT,{
       method:"POST",
       mode:"no-cors",
-      body:JSON.stringify({title:title,audioUrl:uploaded.secure_url,theme:STORY_THEME})
+      body:JSON.stringify({
+        title:title,
+        audioUrl:uploaded.secure_url,
+        theme:STORY_THEME,
+        by:by
+      })
     });
-    recStatus.textContent="Thanks for sharing your story! It should appear in the Story Gallery shortly.";
+
+    recStatus.textContent="Story shared! It’ll appear in the Story Gallery shortly.";
+
+    if(shareConfirm){
+      shareConfirm.classList.add("show");
+      shareConfirm.setAttribute("aria-hidden","false");
+    }
+
     setTimeout(loadStoryGallery,1800);
   }catch(e){
     console.error("Story share failed:",e);
@@ -751,6 +865,23 @@ recShare.onclick=async()=>{
   }
 };
 
+if(shareConfirmClose){
+  shareConfirmClose.onclick=()=>{
+    shareConfirm.classList.remove("show");
+    shareConfirm.setAttribute("aria-hidden","true");
+  };
+}
+
+if(shareConfirm){
+  shareConfirm.addEventListener("click",(e)=>{
+    if(e.target===shareConfirm){
+      shareConfirm.classList.remove("show");
+      shareConfirm.setAttribute("aria-hidden","true");
+    }
+  });
+}
+
+syncStoryShareTitle(true);
 loadStoryGallery();
 
 
