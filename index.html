@@ -91,6 +91,18 @@
     #lightboxPrompt{margin-top:18px;color:white;font-size:1.15rem;font-weight:700;text-align:center;line-height:1.4;max-width:700px}
     #lightboxClose{position:fixed;top:20px;right:22px;width:auto;height:auto;padding:0;margin:0;border:none;border-radius:0;background:transparent;color:white;font-size:42px;font-weight:700;line-height:1;cursor:pointer;box-shadow:none;z-index:20001}
 
+
+    /* ---------- Shared Story Gallery ---------- */
+    .story-share-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fffaf3;color:var(--muted);font-size:.84rem}
+    .story-gallery{max-width:860px;margin:18px auto;background:#fff;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.07);padding:16px}
+    .story-gallery h3{margin:0 0 4px;color:var(--rust2)}
+    .story-gallery-grid{display:grid;gap:10px;margin-top:12px}
+    .story-card{background:#fffaf3;border:1px solid #ffdcbf;border-radius:14px;padding:12px;text-align:left}
+    .story-card-title{font-weight:700;margin-bottom:2px}
+    .story-card-theme{color:var(--muted);font-size:.78rem;margin-bottom:8px}
+    .story-card audio{width:100%}
+    .story-empty{color:var(--muted);font-size:.84rem}
+
   </style>
 </head>
 <body>
@@ -147,9 +159,21 @@
         <button class="btn secondary" id="recStop" disabled>Stop</button>
         <button class="btn secondary" id="recPlay" disabled>Play</button>
         <button class="btn secondary" id="recDownload" disabled>Download</button>
+        <button class="btn" id="recShare" disabled>Share This Story!</button>
+      </div>
+      <div class="story-share-note">
+        Sharing is optional. Your recording stays on your device unless you choose “Share This Story!” Shared stories can be played by other families using the app.
       </div>
       <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
     </div>
+
+    <div class="story-gallery">
+      <h3>The Story Gallery</h3>
+      <p class="muted" style="margin-top:0">Stories shared by families playing Plot Twist.</p>
+      <div id="storyGalleryList" class="story-gallery-grid"></div>
+      <p id="storyGalleryEmpty" class="story-empty">No shared stories yet.</p>
+    </div>
+
     <div class="plot-grid">
       <div class="plot-card">
         <h3>STORY TITLE...</h3>
@@ -634,16 +658,100 @@ $("doodleCopy").onclick=()=>{if(!doodleFavs.length)return toast("No favorites to
 $("doodleClear").onclick=()=>{doodleFavs=[];localStorage.setItem(doodleKey+"_favs","[]");renderDoodleFavs();updateDoodle();toast("Favorites cleared");};
 if(doodleHist.length){doodlePos=doodleHist.length;showDoodle(currentDoodle())} renderDoodleFavs();updateDoodle();
 
-let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null;
-const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recStatus=$("recStatus"),player=$("player");
+let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null, lastStoryBlob=null, lastStoryMime="";
+const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recShare=$("recShare"),recStatus=$("recStatus"),player=$("player");
+const storyGalleryList=$("storyGalleryList"),storyGalleryEmpty=$("storyGalleryEmpty");
 const canPause=!!(window.MediaRecorder&&MediaRecorder.prototype&&typeof MediaRecorder.prototype.pause==="function");
 if(!canPause)recPause.style.display="none";
 function pickMime(){for(const t of ["audio/mp4;codecs=aac","audio/mp4","audio/webm;codecs=opus","audio/webm"])if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))return t;return""}
 function ext(m){m=(m||"").toLowerCase();return m.includes("mp4")?"m4a":m.includes("webm")?"webm":"audio"}
-recStart.onclick=async()=>{recStart.disabled=true;try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});const mime=pickMime();mediaRecorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};mediaRecorder.onstart=()=>recStatus.textContent="Recording…";mediaRecorder.onpause=()=>recStatus.textContent="Paused";mediaRecorder.onresume=()=>recStatus.textContent="Recording…";mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||mime||"audio/webm";const blob=new Blob(chunks,{type});if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);player.src=blobUrl;player.style.display="block";recPlay.disabled=false;recDownload.disabled=false;recStatus.textContent="Recording ready to play or download";if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null};recDownload.onclick=()=>{const a=document.createElement("a");a.href=blobUrl;a.download="dinosaur-plot-twist-story."+ext(type);document.body.appendChild(a);a.click();a.remove()}};mediaRecorder.start();recStop.disabled=false;if(canPause)recPause.disabled=false;recPlay.disabled=true;recDownload.disabled=true;}catch(e){recStatus.textContent="Microphone not available or permission denied.";recStart.disabled=false;}};
+recStart.onclick=async()=>{recStart.disabled=true;try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});const mime=pickMime();mediaRecorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};mediaRecorder.onstart=()=>recStatus.textContent="Recording…";mediaRecorder.onpause=()=>recStatus.textContent="Paused";mediaRecorder.onresume=()=>recStatus.textContent="Recording…";mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||mime||"audio/webm";const blob=new Blob(chunks,{type});lastStoryBlob=blob;lastStoryMime=type;if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);player.src=blobUrl;player.style.display="block";recPlay.disabled=false;recDownload.disabled=false;recShare.disabled=false;recStatus.textContent="Recording ready to play, download, or share";if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null};recDownload.onclick=()=>{const a=document.createElement("a");a.href=blobUrl;a.download="dinosaur-plot-twist-story."+ext(type);document.body.appendChild(a);a.click();a.remove()}};mediaRecorder.start();recStop.disabled=false;if(canPause)recPause.disabled=false;recPlay.disabled=true;recDownload.disabled=true;recShare.disabled=true;}catch(e){recStatus.textContent="Microphone not available or permission denied.";recStart.disabled=false;}};
 recPause.onclick=()=>{if(!mediaRecorder)return;if(mediaRecorder.state==="recording"){mediaRecorder.pause();recPause.textContent="Resume"}else if(mediaRecorder.state==="paused"){mediaRecorder.resume();recPause.textContent="Pause"}};
 recStop.onclick=()=>{if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();recStart.disabled=false;recStop.disabled=true;if(canPause){recPause.disabled=true;recPause.textContent="Pause"}};
 recPlay.onclick=()=>{if(player.src)player.play()};
+
+/* ---------- Shared Plot Twist Story Gallery ---------- */
+const STORY_GALLERY_ENDPOINT="https://script.google.com/macros/s/AKfycbxVIq3FYs3F8luhCB3uhBinaQHKlbuw2Fy6YF2LXBrFpvcSQMXp7nbp8kX654K62-4jCg/exec";
+const STORY_CLOUD_NAME="douw0mebw";
+const STORY_UPLOAD_PRESET="stories";
+const STORY_THEME="Dinosaurs";
+
+function currentPlotStoryTitle(){
+  const deck=makeDeck("plot_title",DATA.titles);
+  const i=deck.current();
+  return i==null ? "" : DATA.titles[i];
+}
+
+async function loadStoryGallery(){
+  if(!storyGalleryList||!storyGalleryEmpty)return;
+  try{
+    const res=await fetch(STORY_GALLERY_ENDPOINT);
+    const data=await res.json();
+    storyGalleryList.innerHTML="";
+    if(!Array.isArray(data)||!data.length){
+      storyGalleryEmpty.style.display="block";
+      return;
+    }
+    storyGalleryEmpty.style.display="none";
+    data.forEach(item=>{
+      if(!item||!item.audioUrl)return;
+      const card=document.createElement("div");card.className="story-card";
+      const title=document.createElement("div");title.className="story-card-title";title.textContent=item.title||"Untitled Plot Twist Story";
+      const theme=document.createElement("div");theme.className="story-card-theme";theme.textContent=item.theme||"Plot Twist";
+      const audio=document.createElement("audio");audio.controls=true;audio.preload="none";audio.src=item.audioUrl;
+      card.append(title,theme,audio);storyGalleryList.appendChild(card);
+    });
+  }catch(e){
+    console.log("Story gallery could not load:",e);
+    storyGalleryEmpty.textContent="Story Gallery could not load right now.";
+    storyGalleryEmpty.style.display="block";
+  }
+}
+
+async function uploadStoryBlob(blob,mime){
+  const form=new FormData();
+  form.append("file",blob,`plot-twist-story.${ext(mime)}`);
+  form.append("upload_preset",STORY_UPLOAD_PRESET);
+  form.append("tags","plot-twist-story");
+  const res=await fetch(`https://api.cloudinary.com/v1_1/${STORY_CLOUD_NAME}/video/upload`,{method:"POST",body:form});
+  if(!res.ok)throw new Error(await res.text());
+  return await res.json();
+}
+
+recShare.onclick=async()=>{
+  if(!lastStoryBlob){
+    recStatus.textContent="Record a story first, then you can share it.";
+    return;
+  }
+  const title=currentPlotStoryTitle();
+  if(!title){
+    recStatus.textContent="Choose a Story Title before sharing your recording.";
+    $("titleOut").scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  if(!window.confirm(`Share “${title}” in the public Story Gallery? Anyone with access to the app may be able to play it.`))return;
+
+  recShare.disabled=true;
+  recStatus.textContent="Uploading your story…";
+  try{
+    const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
+    if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
+    await fetch(STORY_GALLERY_ENDPOINT,{
+      method:"POST",
+      mode:"no-cors",
+      body:JSON.stringify({title:title,audioUrl:uploaded.secure_url,theme:STORY_THEME})
+    });
+    recStatus.textContent="Thanks for sharing your story! It should appear in the Story Gallery shortly.";
+    setTimeout(loadStoryGallery,1800);
+  }catch(e){
+    console.error("Story share failed:",e);
+    recStatus.textContent="Sorry, the story could not be shared. Your recording is still available to play or download.";
+  }finally{
+    recShare.disabled=false;
+  }
+};
+
+loadStoryGallery();
 
 
 async function loadSharedDoodleGallery() {
