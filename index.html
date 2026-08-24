@@ -218,20 +218,10 @@
         Sharing is optional. Your recording stays on your device unless you choose “Share This Story!” Shared stories can be played by other families using the app.
       </div>
 
-      <div class="story-share-form">
-        <div>
-          <label for="storyShareTitle">Story title</label>
-          <input id="storyShareTitle" type="text" placeholder="Choose a Story Title first, or type your own">
-        </div>
-        <div>
-          <label for="storyShareBy">Who is it by? <span style="font-weight:400">(optional)</span></label>
-          <input id="storyShareBy" type="text" placeholder="Example: The Smith Family">
-        </div>
-      </div>
-
       <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
     </div>
-<div class="plot-grid">
+
+    <div class="plot-grid">
       <div class="plot-card">
         <h3>STORY TITLE...</h3>
         <div class="plot-out" id="titleOut">Tap below to get a title</div>
@@ -248,13 +238,14 @@
         <div class="btns"><button class="btn secondary" id="wrapNext">IDEAS FOR HOW TO END...</button><button class="btn secondary" id="wrapBack">Back</button><button class="btn secondary" id="wrapFwd">Forward</button></div>
       </div>
     </div>
-  
+
     <div class="story-gallery">
       <h3>The Story Gallery</h3>
       <p class="muted" style="margin-top:0">Stories shared by families playing Plot Twist.</p>
       <div id="storyGalleryList" class="story-gallery-grid"></div>
       <p id="storyGalleryEmpty" class="story-empty">No shared stories yet.</p>
     </div>
+
   </section>
 
   <section id="doodleScreen" class="screen">
@@ -303,6 +294,30 @@
   </div>
 </div>
 
+
+
+<div id="storyShareModal" class="share-confirm" aria-hidden="true">
+  <div class="share-confirm-card" style="text-align:left">
+    <h3 style="text-align:center">Share Your Story</h3>
+    <p style="text-align:center">Preview or change the title, then add who it’s by if you’d like.</p>
+
+    <div class="story-share-form">
+      <div>
+        <label for="storyShareTitle">Story title</label>
+        <input id="storyShareTitle" type="text" placeholder="Add a story title">
+      </div>
+      <div>
+        <label for="storyShareBy">Who is it by? <span style="font-weight:400">(optional)</span></label>
+        <input id="storyShareBy" type="text" placeholder="Example: The Smith Family">
+      </div>
+    </div>
+
+    <div class="btns" style="margin-top:14px">
+      <button class="btn secondary" id="storyShareCancel" type="button">Cancel</button>
+      <button class="btn" id="storySharePublish" type="button">Share Story</button>
+    </div>
+  </div>
+</div>
 
 <div id="shareConfirm" class="share-confirm" aria-hidden="true">
   <div class="share-confirm-card">
@@ -740,12 +755,13 @@ let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null, lastStoryBlob
 const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recShare=$("recShare"),recStatus=$("recStatus"),player=$("player");
 const storyGalleryList=$("storyGalleryList"),storyGalleryEmpty=$("storyGalleryEmpty");
 const storyShareTitle=$("storyShareTitle"),storyShareBy=$("storyShareBy");
+const storyShareModal=$("storyShareModal"),storyShareCancel=$("storyShareCancel"),storySharePublish=$("storySharePublish");
 const shareConfirm=$("shareConfirm"),shareConfirmClose=$("shareConfirmClose");
 const canPause=!!(window.MediaRecorder&&MediaRecorder.prototype&&typeof MediaRecorder.prototype.pause==="function");
 if(!canPause)recPause.style.display="none";
 function pickMime(){for(const t of ["audio/mp4;codecs=aac","audio/mp4","audio/webm;codecs=opus","audio/webm"])if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))return t;return""}
 function ext(m){m=(m||"").toLowerCase();return m.includes("mp4")?"m4a":m.includes("webm")?"webm":"audio"}
-recStart.onclick=async()=>{recStart.disabled=true;try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});const mime=pickMime();mediaRecorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};mediaRecorder.onstart=()=>recStatus.textContent="Recording…";mediaRecorder.onpause=()=>recStatus.textContent="Paused";mediaRecorder.onresume=()=>recStatus.textContent="Recording…";mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||mime||"audio/webm";const blob=new Blob(chunks,{type});lastStoryBlob=blob;lastStoryMime=type;if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);player.src=blobUrl;player.style.display="block";recPlay.disabled=false;recDownload.disabled=false;recShare.disabled=false;recStatus.textContent="Recording ready to play, download, or share";if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null};recDownload.onclick=()=>{const a=document.createElement("a");a.href=blobUrl;a.download="dinosaur-plot-twist-story."+ext(type);document.body.appendChild(a);a.click();a.remove()}};mediaRecorder.start();recStop.disabled=false;if(canPause)recPause.disabled=false;recPlay.disabled=true;recDownload.disabled=true;recShare.disabled=true;}catch(e){recStatus.textContent="Microphone not available or permission denied.";recStart.disabled=false;}};
+recStart.onclick=async()=>{recStart.disabled=true;recStatus.textContent="Requesting microphone access…";try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});const mime=pickMime();mediaRecorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};mediaRecorder.onstart=()=>recStatus.textContent="Recording…";mediaRecorder.onpause=()=>recStatus.textContent="Paused";mediaRecorder.onresume=()=>recStatus.textContent="Recording…";mediaRecorder.onstop=()=>{const type=mediaRecorder.mimeType||mime||"audio/webm";const blob=new Blob(chunks,{type});lastStoryBlob=blob;lastStoryMime=type;if(blobUrl)URL.revokeObjectURL(blobUrl);blobUrl=URL.createObjectURL(blob);player.src=blobUrl;player.style.display="block";recPlay.disabled=false;recDownload.disabled=false;recShare.disabled=false;recStatus.textContent="Recording ready to play, download, or share";if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null};recDownload.onclick=()=>{const a=document.createElement("a");a.href=blobUrl;a.download="dinosaur-plot-twist-story."+ext(type);document.body.appendChild(a);a.click();a.remove()}};mediaRecorder.start();recStop.disabled=false;if(canPause)recPause.disabled=false;recPlay.disabled=true;recDownload.disabled=true;recShare.disabled=true;}catch(e){recStatus.textContent="Microphone not available or permission denied.";recStart.disabled=false;}};
 recPause.onclick=()=>{if(!mediaRecorder)return;if(mediaRecorder.state==="recording"){mediaRecorder.pause();recPause.textContent="Resume"}else if(mediaRecorder.state==="paused"){mediaRecorder.resume();recPause.textContent="Pause"}};
 recStop.onclick=()=>{if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();recStart.disabled=false;recStop.disabled=true;if(canPause){recPause.disabled=true;recPause.textContent="Pause"}};
 recPlay.onclick=()=>{if(player.src)player.play()};
@@ -814,56 +830,87 @@ async function uploadStoryBlob(blob,mime){
   return await res.json();
 }
 
-recShare.onclick=async()=>{
+recShare.onclick=()=>{
   if(!lastStoryBlob){
     recStatus.textContent="Record a story first, then you can share it.";
     return;
   }
 
-  const title=(storyShareTitle?.value||"").trim();
-  const by=(storyShareBy?.value||"").trim();
+  // Prefill with the current generated title each time Share is opened.
+  storyTitleManuallyEdited=false;
+  syncStoryShareTitle(true);
+  if(storyShareBy) storyShareBy.value="";
 
-  if(!title){
-    recStatus.textContent="Please add a story title before sharing.";
-    storyShareTitle?.focus();
-    return;
-  }
-
-  if(!window.confirm(`Share “${title}” in the public Story Gallery? Anyone with access to the app may be able to play it.`))return;
-
-  recShare.disabled=true;
-  recStatus.textContent="Uploading your story…";
-
-  try{
-    const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
-    if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
-
-    await fetch(STORY_GALLERY_ENDPOINT,{
-      method:"POST",
-      mode:"no-cors",
-      body:JSON.stringify({
-        title:title,
-        audioUrl:uploaded.secure_url,
-        theme:STORY_THEME,
-        by:by
-      })
-    });
-
-    recStatus.textContent="Story shared! It’ll appear in the Story Gallery shortly.";
-
-    if(shareConfirm){
-      shareConfirm.classList.add("show");
-      shareConfirm.setAttribute("aria-hidden","false");
-    }
-
-    setTimeout(loadStoryGallery,1800);
-  }catch(e){
-    console.error("Story share failed:",e);
-    recStatus.textContent="Sorry, the story could not be shared. Your recording is still available to play or download.";
-  }finally{
-    recShare.disabled=false;
+  if(storyShareModal){
+    storyShareModal.classList.add("show");
+    storyShareModal.setAttribute("aria-hidden","false");
+    setTimeout(()=>storyShareTitle?.focus(),50);
   }
 };
+
+function closeStoryShareModal(){
+  if(!storyShareModal)return;
+  storyShareModal.classList.remove("show");
+  storyShareModal.setAttribute("aria-hidden","true");
+}
+
+if(storyShareCancel){
+  storyShareCancel.onclick=closeStoryShareModal;
+}
+
+if(storyShareModal){
+  storyShareModal.addEventListener("click",(e)=>{
+    if(e.target===storyShareModal)closeStoryShareModal();
+  });
+}
+
+if(storySharePublish){
+  storySharePublish.onclick=async()=>{
+    const title=(storyShareTitle?.value||"").trim();
+    const by=(storyShareBy?.value||"").trim();
+
+    if(!title){
+      storyShareTitle?.focus();
+      return;
+    }
+
+    storySharePublish.disabled=true;
+    storySharePublish.textContent="Sharing…";
+    recStatus.textContent="Uploading your story…";
+
+    try{
+      const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
+      if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
+
+      await fetch(STORY_GALLERY_ENDPOINT,{
+        method:"POST",
+        mode:"no-cors",
+        body:JSON.stringify({
+          title:title,
+          audioUrl:uploaded.secure_url,
+          theme:STORY_THEME,
+          by:by
+        })
+      });
+
+      closeStoryShareModal();
+      recStatus.textContent="Story shared! It’ll appear in the Story Gallery shortly.";
+
+      if(shareConfirm){
+        shareConfirm.classList.add("show");
+        shareConfirm.setAttribute("aria-hidden","false");
+      }
+
+      setTimeout(loadStoryGallery,1800);
+    }catch(e){
+      console.error("Story share failed:",e);
+      recStatus.textContent="Sorry, the story could not be shared. Your recording is still available to play or download.";
+    }finally{
+      storySharePublish.disabled=false;
+      storySharePublish.textContent="Share Story";
+    }
+  };
+}
 
 if(shareConfirmClose){
   shareConfirmClose.onclick=()=>{
