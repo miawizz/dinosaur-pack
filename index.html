@@ -104,57 +104,15 @@
     .story-empty{color:var(--muted);font-size:.84rem}
 
 
-    .story-share-form{
-      margin-top:12px;
-      display:grid;
-      gap:10px;
-    }
-    .story-share-form label{
-      font-weight:700;
-      color:#53322b;
-      font-size:.9rem;
-    }
-    .story-share-form input{
-      width:100%;
-      padding:.8rem .9rem;
-      border-radius:12px;
-      border:2px dashed var(--yellow);
-      font-family:inherit;
-      font-size:.95rem;
-    }
-    .story-byline{
-      color:var(--muted);
-      font-size:.78rem;
-      margin:-2px 0 8px;
-    }
-    .share-confirm{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      z-index:25000;
-    }
-    .share-confirm.show{display:flex}
-    .share-confirm-card{
-      max-width:420px;
-      width:100%;
-      background:#fff;
-      border-radius:18px;
-      padding:22px;
-      box-shadow:0 12px 40px rgba(0,0,0,.22);
-      text-align:center;
-    }
-    .share-confirm-card h3{
-      margin:0 0 8px;
-      color:var(--teal);
-    }
-    .share-confirm-card p{
-      color:var(--muted);
-      margin:0 0 14px;
-    }
+    .story-share-form{display:grid;gap:10px;margin-top:12px;text-align:left}
+    .story-share-form label{display:block;font-weight:700;color:#53322b;font-size:.9rem;margin-bottom:4px}
+    .story-share-form input{width:100%;padding:.8rem .9rem;border-radius:12px;border:2px dashed var(--yellow);font-family:inherit;font-size:.95rem}
+    .story-byline{color:var(--muted);font-size:.78rem;margin:-2px 0 8px}
+    .story-modal{position:fixed;inset:0;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:25000}
+    .story-modal.show{display:flex}
+    .story-modal-card{max-width:440px;width:100%;background:#fff;border-radius:18px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.24)}
+    .story-modal-card h3{margin:0 0 8px;color:var(--teal);text-align:center}
+    .story-modal-card>p{color:var(--muted);margin:0 0 14px;text-align:center}
 
   </style>
 </head>
@@ -217,7 +175,6 @@
       <div class="story-share-note">
         Sharing is optional. Your recording stays on your device unless you choose “Share This Story!” Shared stories can be played by other families using the app.
       </div>
-
       <audio id="player" controls style="width:100%;margin-top:8px;display:none"></audio>
     </div>
 
@@ -295,12 +252,10 @@
 </div>
 
 
-
-<div id="storyShareModal" class="share-confirm" aria-hidden="true">
-  <div class="share-confirm-card" style="text-align:left">
-    <h3 style="text-align:center">Share Your Story</h3>
-    <p style="text-align:center">Preview or change the title, then add who it’s by if you’d like.</p>
-
+<div id="storyShareModal" class="story-modal" aria-hidden="true">
+  <div class="story-modal-card">
+    <h3>Share Your Story</h3>
+    <p>Preview or change the title, then add who it’s by if you’d like.</p>
     <div class="story-share-form">
       <div>
         <label for="storyShareTitle">Story title</label>
@@ -311,7 +266,6 @@
         <input id="storyShareBy" type="text" placeholder="Example: The Smith Family">
       </div>
     </div>
-
     <div class="btns" style="margin-top:14px">
       <button class="btn secondary" id="storyShareCancel" type="button">Cancel</button>
       <button class="btn" id="storySharePublish" type="button">Share Story</button>
@@ -319,11 +273,11 @@
   </div>
 </div>
 
-<div id="shareConfirm" class="share-confirm" aria-hidden="true">
-  <div class="share-confirm-card">
+<div id="storyShareThanks" class="story-modal" aria-hidden="true">
+  <div class="story-modal-card" style="text-align:center">
     <h3>Thanks for sharing your story!</h3>
     <p>It’ll appear in the Story Gallery shortly.</p>
-    <button class="btn" id="shareConfirmClose" type="button">Got it!</button>
+    <button class="btn" id="storyShareThanksClose" type="button">Got it!</button>
   </div>
 </div>
 
@@ -715,11 +669,6 @@ function wirePlot(prefix, items, outId, nextId, backId, fwdId) {
   const i=deck.current(); if(i!=null)out.textContent=items[i]; update();
 }
 wirePlot("title",DATA.titles,"titleOut","titleNext","titleBack","titleFwd");
-["titleNext","titleBack","titleFwd"].forEach(id=>{
-  const btn=$(id);
-  if(btn) btn.addEventListener("click",()=>setTimeout(()=>syncStoryShareTitle(true),0));
-});
-
 wirePlot("twist",DATA.twists,"twistOut","twistNext","twistBack","twistFwd");
 wirePlot("wrap",DATA.wraps,"wrapOut","wrapNext","wrapBack","wrapFwd");
 
@@ -754,9 +703,8 @@ if(doodleHist.length){doodlePos=doodleHist.length;showDoodle(currentDoodle())} r
 let mediaRecorder=null, mediaStream=null, chunks=[], blobUrl=null, lastStoryBlob=null, lastStoryMime="";
 const recStart=$("recStart"),recPause=$("recPause"),recStop=$("recStop"),recPlay=$("recPlay"),recDownload=$("recDownload"),recShare=$("recShare"),recStatus=$("recStatus"),player=$("player");
 const storyGalleryList=$("storyGalleryList"),storyGalleryEmpty=$("storyGalleryEmpty");
-const storyShareTitle=$("storyShareTitle"),storyShareBy=$("storyShareBy");
-const storyShareModal=$("storyShareModal"),storyShareCancel=$("storyShareCancel"),storySharePublish=$("storySharePublish");
-const shareConfirm=$("shareConfirm"),shareConfirmClose=$("shareConfirmClose");
+const storyShareModal=$("storyShareModal"),storyShareTitle=$("storyShareTitle"),storyShareBy=$("storyShareBy"),storyShareCancel=$("storyShareCancel"),storySharePublish=$("storySharePublish");
+const storyShareThanks=$("storyShareThanks"),storyShareThanksClose=$("storyShareThanksClose");
 const canPause=!!(window.MediaRecorder&&MediaRecorder.prototype&&typeof MediaRecorder.prototype.pause==="function");
 if(!canPause)recPause.style.display="none";
 function pickMime(){for(const t of ["audio/mp4;codecs=aac","audio/mp4","audio/webm;codecs=opus","audio/webm"])if(window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))return t;return""}
@@ -778,19 +726,6 @@ function currentPlotStoryTitle(){
   return i==null ? "" : DATA.titles[i];
 }
 
-let storyTitleManuallyEdited=false;
-
-function syncStoryShareTitle(force=false){
-  if(!storyShareTitle)return;
-  if(force || !storyTitleManuallyEdited){
-    storyShareTitle.value=currentPlotStoryTitle();
-  }
-}
-
-if(storyShareTitle){
-  storyShareTitle.addEventListener("input",()=>{storyTitleManuallyEdited=true;});
-}
-
 async function loadStoryGallery(){
   if(!storyGalleryList||!storyGalleryEmpty)return;
   try{
@@ -807,9 +742,7 @@ async function loadStoryGallery(){
       const card=document.createElement("div");card.className="story-card";
       const title=document.createElement("div");title.className="story-card-title";title.textContent=item.title||"Untitled Plot Twist Story";
       const theme=document.createElement("div");theme.className="story-card-theme";theme.textContent=item.theme||"Plot Twist";
-      const by=document.createElement("div");by.className="story-byline";
-      by.textContent=item.by ? "By " + item.by : "";
-      if(!item.by) by.style.display="none";
+      const by=document.createElement("div");by.className="story-byline";by.textContent=item.by ? "By " + item.by : "";if(!item.by)by.style.display="none";
       const audio=document.createElement("audio");audio.controls=true;audio.preload="none";audio.src=item.audioUrl;
       card.append(title,theme,by,audio);storyGalleryList.appendChild(card);
     });
@@ -836,99 +769,65 @@ recShare.onclick=()=>{
     return;
   }
 
-  // Prefill with the current generated title each time Share is opened.
-  storyTitleManuallyEdited=false;
-  syncStoryShareTitle(true);
-  if(storyShareBy) storyShareBy.value="";
-
-  if(storyShareModal){
-    storyShareModal.classList.add("show");
-    storyShareModal.setAttribute("aria-hidden","false");
-    setTimeout(()=>storyShareTitle?.focus(),50);
-  }
+  const generatedTitle=currentPlotStoryTitle();
+  storyShareTitle.value=generatedTitle || "";
+  storyShareBy.value="";
+  storyShareModal.classList.add("show");
+  storyShareModal.setAttribute("aria-hidden","false");
 };
 
 function closeStoryShareModal(){
-  if(!storyShareModal)return;
   storyShareModal.classList.remove("show");
   storyShareModal.setAttribute("aria-hidden","true");
 }
 
-if(storyShareCancel){
-  storyShareCancel.onclick=closeStoryShareModal;
+storyShareCancel.onclick=closeStoryShareModal;
+storyShareModal.addEventListener("click",e=>{if(e.target===storyShareModal)closeStoryShareModal();});
+
+storySharePublish.onclick=async()=>{
+  const title=storyShareTitle.value.trim();
+  const by=storyShareBy.value.trim();
+
+  if(!title){
+    storyShareTitle.focus();
+    return;
+  }
+
+  storySharePublish.disabled=true;
+  storySharePublish.textContent="Sharing…";
+  recStatus.textContent="Uploading your story…";
+
+  try{
+    const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
+    if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
+
+    await fetch(STORY_GALLERY_ENDPOINT,{
+      method:"POST",
+      mode:"no-cors",
+      body:JSON.stringify({title:title,audioUrl:uploaded.secure_url,theme:STORY_THEME,by:by})
+    });
+
+    closeStoryShareModal();
+    recStatus.textContent="Story shared! It’ll appear in the Story Gallery shortly.";
+    storyShareThanks.classList.add("show");
+    storyShareThanks.setAttribute("aria-hidden","false");
+    setTimeout(loadStoryGallery,1800);
+  }catch(e){
+    console.error("Story share failed:",e);
+    recStatus.textContent="Sorry, the story could not be shared. Your recording is still available to play or download.";
+  }finally{
+    storySharePublish.disabled=false;
+    storySharePublish.textContent="Share Story";
+  }
+};
+
+function closeStoryThanks(){
+  storyShareThanks.classList.remove("show");
+  storyShareThanks.setAttribute("aria-hidden","true");
 }
+storyShareThanksClose.onclick=closeStoryThanks;
+storyShareThanks.addEventListener("click",e=>{if(e.target===storyShareThanks)closeStoryThanks();});
 
-if(storyShareModal){
-  storyShareModal.addEventListener("click",(e)=>{
-    if(e.target===storyShareModal)closeStoryShareModal();
-  });
-}
-
-if(storySharePublish){
-  storySharePublish.onclick=async()=>{
-    const title=(storyShareTitle?.value||"").trim();
-    const by=(storyShareBy?.value||"").trim();
-
-    if(!title){
-      storyShareTitle?.focus();
-      return;
-    }
-
-    storySharePublish.disabled=true;
-    storySharePublish.textContent="Sharing…";
-    recStatus.textContent="Uploading your story…";
-
-    try{
-      const uploaded=await uploadStoryBlob(lastStoryBlob,lastStoryMime);
-      if(!uploaded||!uploaded.secure_url)throw new Error("No audio URL returned");
-
-      await fetch(STORY_GALLERY_ENDPOINT,{
-        method:"POST",
-        mode:"no-cors",
-        body:JSON.stringify({
-          title:title,
-          audioUrl:uploaded.secure_url,
-          theme:STORY_THEME,
-          by:by
-        })
-      });
-
-      closeStoryShareModal();
-      recStatus.textContent="Story shared! It’ll appear in the Story Gallery shortly.";
-
-      if(shareConfirm){
-        shareConfirm.classList.add("show");
-        shareConfirm.setAttribute("aria-hidden","false");
-      }
-
-      setTimeout(loadStoryGallery,1800);
-    }catch(e){
-      console.error("Story share failed:",e);
-      recStatus.textContent="Sorry, the story could not be shared. Your recording is still available to play or download.";
-    }finally{
-      storySharePublish.disabled=false;
-      storySharePublish.textContent="Share Story";
-    }
-  };
-}
-
-if(shareConfirmClose){
-  shareConfirmClose.onclick=()=>{
-    shareConfirm.classList.remove("show");
-    shareConfirm.setAttribute("aria-hidden","true");
-  };
-}
-
-if(shareConfirm){
-  shareConfirm.addEventListener("click",(e)=>{
-    if(e.target===shareConfirm){
-      shareConfirm.classList.remove("show");
-      shareConfirm.setAttribute("aria-hidden","true");
-    }
-  });
-}
-
-syncStoryShareTitle(true);
 loadStoryGallery();
 
 
